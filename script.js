@@ -1,11 +1,23 @@
 //---------------------------------- Start/global variables --------------------------------
+
 //-----------Start/inputs--------------
 let inputLoginUsername = document.querySelector('.login__input--user');
 let inputLoginPin = document.querySelector('.login__input--pin');
 //-----------End/inputs--------------
+
+//-----------Start/lables--------------
+let lblWelcome = document.querySelector('.welcome');
+let lblDate = document.querySelector('.date');
+//-----------End/lables--------------
+
 //-----------Start/buttons--------------
 let btnLogin = document.querySelector('.login__btn');
 //-----------End/buttons--------------
+
+//-----------Start/containers--------------
+let containerApp = document.querySelector('.app');
+//-----------End/containers--------------
+
 //---------------------------------- End/global variables --------------------------------
 
 //---------------------------------- Start/accounts --------------------------------
@@ -56,10 +68,40 @@ let login = function (loginUsername = '', loginPin = '') {
         ) {
             console.log('hey', account.owner);
             flag = false;
+            updateUI(account);
             break;
         } else username = '';
     }
     if (flag == true) window.alert('user not found');
+};
+
+const updateUI = function (user) {
+    containerApp.style.opacity = '100';
+
+    lblWelcome.textContent = `Good Day ${user.owner.substring(
+        0,
+        user.owner.indexOf(' ') + 1
+    )}!`;
+
+    //show date and time
+    showDate();
+};
+
+const showDate = function () {
+    options = {
+        hour: 'numeric',
+        minute: 'numeric',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+    };
+
+    let date = new Intl.DateTimeFormat(navigator.language, options);
+    lblDate.textContent = date.format(new Date());
+
+    setInterval(() => {
+        lblDate.textContent = date.format(new Date());
+    }, 60000);
 };
 
 //---------------------------------- End/functions --------------------------------
