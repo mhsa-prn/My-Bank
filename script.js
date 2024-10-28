@@ -1,4 +1,14 @@
-//----------------------- Define accounts -----------------------
+//---------------------------------- Start/global variables --------------------------------
+//-----------Start/inputs--------------
+let inputLoginUsername = document.querySelector('.login__input--user');
+let inputLoginPin = document.querySelector('.login__input--pin');
+//-----------End/inputs--------------
+//-----------Start/buttons--------------
+let btnLogin = document.querySelector('.login__btn');
+//-----------End/buttons--------------
+//---------------------------------- End/global variables --------------------------------
+
+//---------------------------------- Start/accounts --------------------------------
 let account1 = {
     owner: 'Mahsa Piran',
     pin: 1111,
@@ -28,3 +38,32 @@ let account4 = {
 };
 
 let accounts = [account1, account2, account3, account4];
+//---------------------------------- End/accounts --------------------------------
+
+//---------------------------------- Start/functions --------------------------------
+let login = function (loginUsername = '', loginPin = '') {
+    let username = '';
+    let flag = true;
+    //console.log(accounts);
+    for (let account of accounts) {
+        let nameList = account.owner.split(' ');
+        for (let nl of nameList) {
+            username += nl[0];
+        }
+        if (
+            loginUsername.toLowerCase == username.toLowerCase &&
+            loginPin == account.pin
+        ) {
+            console.log('hey', account.owner);
+            flag = false;
+            break;
+        } else username = '';
+    }
+    if (flag == true) window.alert('user not found');
+};
+
+//---------------------------------- End/functions --------------------------------
+
+btnLogin.addEventListener('click', function (e) {
+    login(inputLoginUsername.value, inputLoginPin.value);
+});
