@@ -6,6 +6,6 @@ My Bank is a digital bank that offers you basic banking services such as:
 - Check interest amount 
 - Transfer money to another account
 - Request loan
-- close the account
+- Close the account
 
-[The flowchart](https://github.com/mhsa-prn/My-Bank/blob/main/MyBankFlowchart.jpg) will show you how the app works.
+[The flowchart](https://github.com/mhsa-prn/My-Bank/blob/main/MyBankFlowchart.jpg) will show you the main structure of the app.
