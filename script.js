@@ -9,6 +9,9 @@ let inputLoginPin = document.querySelector('.login__input--pin');
 let lblWelcome = document.querySelector('.welcome');
 let lblDate = document.querySelector('.date');
 let lblLogoutTimer = document.querySelector('.timer');
+let lblBalance = document.querySelector('.balance__value');
+let lblMovementValue = document.querySelector('.movements__value');
+let lblMovementDate = document.querySelector('.movements__date');
 //-----------End/lables--------------
 
 //-----------Start/buttons--------------
@@ -17,6 +20,7 @@ let btnLogin = document.querySelector('.login__btn');
 
 //-----------Start/containers--------------
 let containerApp = document.querySelector('.app');
+let containerMovements = document.querySelector('.movements');
 //-----------End/containers--------------
 
 //---------------------------------- End/global variables --------------------------------
@@ -54,6 +58,7 @@ let accounts = [account1, account2, account3, account4];
 //---------------------------------- End/accounts --------------------------------
 
 //---------------------------------- Start/functions --------------------------------
+//login------------------------------------
 let login = function (loginUsername = '', loginPin = '') {
     let username = '';
     let flag = true;
@@ -75,9 +80,13 @@ let login = function (loginUsername = '', loginPin = '') {
     }
     if (flag == true) window.alert('user not found');
 };
+//-----------------------------------------------
 
+//update ui---------------------------------
 const updateUI = function (user) {
     containerApp.style.opacity = '100';
+    inputLoginPin = '';
+    inputLoginUsername = '';
 
     lblWelcome.textContent = `Good Day ${user.owner.substring(
         0,
@@ -89,8 +98,16 @@ const updateUI = function (user) {
 
     //logout timer
     logoutTimer();
-};
 
+    //set balance
+    balanceCalculator(user);
+
+    //show movements
+    showMovements(user);
+};
+//----------------------------------------
+
+//calculate date and show ----------------
 const showDate = function () {
     options = {
         hour: 'numeric',
@@ -107,6 +124,7 @@ const showDate = function () {
         lblDate.textContent = date.format(new Date());
     }, 60000);
 };
+//-------------------------------------
 
 //log out timer function------------
 const logoutTimer = function () {
@@ -115,8 +133,9 @@ const logoutTimer = function () {
     let sec = 60;
     let timer = setInterval(() => {
         sec--;
-        lblLogoutTimer.textContent = `${min < 10 ? `0${min}` : min}:
-        ${sec < 10 ? `0${sec}` : sec}`;
+        lblLogoutTimer.textContent = `${min < 10 ? `0${min}` : min}:${
+            sec < 10 ? `0${sec}` : sec
+        }`;
         if (min == 0 && sec == 0) {
             clearInterval(timer);
             containerApp.style.opacity = 0;
@@ -128,6 +147,32 @@ const logoutTimer = function () {
     }, 1000);
 };
 //------------------------------------
+
+//calculate balance------------------
+let balanceCalculator = function (user) {
+    let balance = 0;
+    balance = user.movements.reduce((acc, movement) => acc + movement);
+    lblBalance.textContent = `${balance}€`;
+};
+//-------------------------------------
+
+let showMovements = function (user) {
+    let html = '';
+
+    for ([i, movement] of user.movements.entries()) {
+        console.log(i, movement);
+        html = `<div class="movements__row">
+                    <div class="movements__type movements__type--${
+                        movement > 0 ? 'deposit' : 'withdrawal'
+                    }">
+                        ${++i} deposit
+                    </div>
+                    <div class="movements__date"></div>
+                    <div class="movements__value">${movement}€</div>
+                </div>`;
+        containerMovements.insertAdjacentHTML('afterbegin', html);
+    }
+};
 
 //---------------------------------- End/functions --------------------------------
 
