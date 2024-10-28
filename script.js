@@ -8,6 +8,7 @@ let inputLoginPin = document.querySelector('.login__input--pin');
 //-----------Start/lables--------------
 let lblWelcome = document.querySelector('.welcome');
 let lblDate = document.querySelector('.date');
+let lblLogoutTimer = document.querySelector('.timer');
 //-----------End/lables--------------
 
 //-----------Start/buttons--------------
@@ -85,6 +86,9 @@ const updateUI = function (user) {
 
     //show date and time
     showDate();
+
+    //logout timer
+    logoutTimer();
 };
 
 const showDate = function () {
@@ -103,6 +107,27 @@ const showDate = function () {
         lblDate.textContent = date.format(new Date());
     }, 60000);
 };
+
+//log out timer function------------
+const logoutTimer = function () {
+    lblLogoutTimer.textContent = '15:00';
+    let min = 1;
+    let sec = 60;
+    let timer = setInterval(() => {
+        sec--;
+        lblLogoutTimer.textContent = `${min < 10 ? `0${min}` : min}:
+        ${sec < 10 ? `0${sec}` : sec}`;
+        if (min == 0 && sec == 0) {
+            clearInterval(timer);
+            containerApp.style.opacity = 0;
+        }
+        if (sec == 0) {
+            min--;
+            sec = 60;
+        }
+    }, 1000);
+};
+//------------------------------------
 
 //---------------------------------- End/functions --------------------------------
 
