@@ -1,8 +1,13 @@
 //---------------------------------- Start/global variables --------------------------------
 
+//-----------GLOBAL VARIABLES------------
+let user;
+//-------------------------------------------------
 //-----------Start/inputs--------------
 let inputLoginUsername = document.querySelector('.login__input--user');
 let inputLoginPin = document.querySelector('.login__input--pin');
+let inputTransferTo = document.querySelector('.form__input--to');
+let inputTransferAmount = document.querySelector('.form__input--amount');
 //-----------End/inputs--------------
 
 //-----------Start/lables--------------
@@ -10,12 +15,11 @@ let lblWelcome = document.querySelector('.welcome');
 let lblDate = document.querySelector('.date');
 let lblLogoutTimer = document.querySelector('.timer');
 let lblBalance = document.querySelector('.balance__value');
-let lblMovementValue = document.querySelector('.movements__value');
-let lblMovementDate = document.querySelector('.movements__date');
 //-----------End/lables--------------
 
 //-----------Start/buttons--------------
 let btnLogin = document.querySelector('.login__btn');
+let btnTransfer = document.querySelector('.form__btn--transfer');
 //-----------End/buttons--------------
 
 //-----------Start/containers--------------
@@ -74,7 +78,8 @@ let login = function (loginUsername = '', loginPin = '') {
         ) {
             console.log('hey', account.owner);
             flag = false;
-            updateUI(account);
+            user = account;
+            updateUI();
             break;
         } else username = '';
     }
@@ -83,10 +88,10 @@ let login = function (loginUsername = '', loginPin = '') {
 //-----------------------------------------------
 
 //update ui---------------------------------
-const updateUI = function (user) {
+const updateUI = function () {
     containerApp.style.opacity = '100';
-    inputLoginPin = '';
-    inputLoginUsername = '';
+    inputLoginPin.value = '';
+    inputLoginUsername.value = '';
 
     lblWelcome.textContent = `Good Day ${user.owner.substring(
         0,
@@ -100,10 +105,10 @@ const updateUI = function (user) {
     logoutTimer();
 
     //set balance
-    balanceCalculator(user);
+    balanceCalculator();
 
     //show movements
-    showMovements(user);
+    showMovements();
 };
 //----------------------------------------
 
@@ -129,7 +134,7 @@ const showDate = function () {
 //log out timer function------------
 const logoutTimer = function () {
     lblLogoutTimer.textContent = '15:00';
-    let min = 1;
+    let min = 14;
     let sec = 60;
     let timer = setInterval(() => {
         sec--;
@@ -149,14 +154,14 @@ const logoutTimer = function () {
 //------------------------------------
 
 //calculate balance------------------
-let balanceCalculator = function (user) {
+let balanceCalculator = function () {
     let balance = 0;
     balance = user.movements.reduce((acc, movement) => acc + movement);
     lblBalance.textContent = `${balance}€`;
 };
 //-------------------------------------
 
-let showMovements = function (user) {
+let showMovements = function () {
     let html = '';
 
     for ([i, movement] of user.movements.entries()) {
@@ -174,8 +179,26 @@ let showMovements = function (user) {
     }
 };
 
+let transferMoney = function (transferAmount, transferTo) {
+    user.movements.push(-transferAmount);
+
+    for (let account of accounts) {
+        if (account.owner == transferTo) {
+            account.movements.push(transferAmount);
+        }
+    }
+
+    showMovements();
+};
+
 //---------------------------------- End/functions --------------------------------
 
 btnLogin.addEventListener('click', function (e) {
+    e.preventDefault();
     login(inputLoginUsername.value, inputLoginPin.value);
+});
+
+btnTransfer.addEventListener('click', function (e) {
+    e.preventDefault();
+    transferMoney(inputTransferAmount.value, inputTransferTo.value);
 });
