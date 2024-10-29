@@ -158,14 +158,16 @@ let balanceCalculator = function () {
     let balance = 0;
     balance = user.movements.reduce((acc, movement) => acc + movement);
     lblBalance.textContent = `${balance}€`;
+    return balance;
 };
 //-------------------------------------
 
 let showMovements = function () {
+    //containerMovements.remove();
+    containerMovements.replaceChildren();
     let html = '';
 
     for ([i, movement] of user.movements.entries()) {
-        console.log(i, movement);
         html = `<div class="movements__row">
                     <div class="movements__type movements__type--${
                         movement > 0 ? 'deposit' : 'withdrawal'
@@ -180,15 +182,25 @@ let showMovements = function () {
 };
 
 let transferMoney = function (transferAmount, transferTo) {
-    user.movements.push(-transferAmount);
-
+    let flag = true;
     for (let account of accounts) {
-        if (account.owner == transferTo) {
-            account.movements.push(transferAmount);
+        if (
+            account.owner.toLowerCase() === transferTo.toLowerCase() &&
+            Number(transferAmount) <= balanceCalculator()
+        ) {
+            user.movements.push(-transferAmount);
+            account.movements.push(Number(transferAmount));
+            inputTransferTo.value = '';
+            inputTransferAmount.value = '';
+            showMovements();
+            balanceCalculator();
+            flag = false;
+            break;
         }
     }
-
-    showMovements();
+    if (flag) {
+        window.alert('User not found!');
+    }
 };
 
 //---------------------------------- End/functions --------------------------------
