@@ -199,7 +199,7 @@ let transferMoney = function (transferAmount, transferTo) {
         }
     }
     if (flag) {
-        window.alert('User not found!');
+        window.alert('Transfer is impossible!');
     }
 };
 
