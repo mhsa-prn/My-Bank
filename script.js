@@ -8,6 +8,7 @@ let inputLoginUsername = document.querySelector('.login__input--user');
 let inputLoginPin = document.querySelector('.login__input--pin');
 let inputTransferTo = document.querySelector('.form__input--to');
 let inputTransferAmount = document.querySelector('.form__input--amount');
+let inputLoanAmount = document.querySelector('.form__input--loan-amount');
 //-----------End/inputs--------------
 
 //-----------Start/lables--------------
@@ -20,6 +21,7 @@ let lblBalance = document.querySelector('.balance__value');
 //-----------Start/buttons--------------
 let btnLogin = document.querySelector('.login__btn');
 let btnTransfer = document.querySelector('.form__btn--transfer');
+let btnRequestLoan = document.querySelector('.form__btn--loan');
 //-----------End/buttons--------------
 
 //-----------Start/containers--------------
@@ -181,15 +183,16 @@ let showMovements = function () {
     }
 };
 
-let transferMoney = function (transferAmount, transferTo) {
+let transferMoney = function (amount, transferTo) {
+    amount = Number(amount);
     let flag = true;
     for (let account of accounts) {
         if (
             account.owner.toLowerCase() === transferTo.toLowerCase() &&
-            Number(transferAmount) <= balanceCalculator()
+            amount <= balanceCalculator()
         ) {
-            user.movements.push(-transferAmount);
-            account.movements.push(Number(transferAmount));
+            user.movements.push(-amount);
+            account.movements.push(amount);
             inputTransferTo.value = '';
             inputTransferAmount.value = '';
             showMovements();
@@ -203,6 +206,15 @@ let transferMoney = function (transferAmount, transferTo) {
     }
 };
 
+let requestLoan = function (amount) {
+    amount = Number(amount);
+    if (0.5 * amount < balanceCalculator()) {
+        user.movements.push(amount);
+        inputLoanAmount.value = '';
+        showMovements();
+        balanceCalculator();
+    } else window.alert('Your account has no enough credit!');
+};
 //---------------------------------- End/functions --------------------------------
 
 btnLogin.addEventListener('click', function (e) {
@@ -213,4 +225,9 @@ btnLogin.addEventListener('click', function (e) {
 btnTransfer.addEventListener('click', function (e) {
     e.preventDefault();
     transferMoney(inputTransferAmount.value, inputTransferTo.value);
+});
+
+btnRequestLoan.addEventListener('click', function (e) {
+    e.preventDefault();
+    requestLoan(inputLoanAmount.value);
 });
