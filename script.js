@@ -3,6 +3,13 @@
 //-----------GLOBAL VARIABLES------------
 let user;
 let globalTimer;
+let timeOptions = {
+    hour: 'numeric',
+    minute: 'numeric',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+};
 //-------------------------------------------------
 //-----------Start/inputs--------------
 let inputLoginUsername = document.querySelector('.login__input--user');
@@ -39,28 +46,61 @@ let containerMovements = document.querySelector('.movements');
 let account1 = {
     owner: 'Mahsa Piran',
     pin: 1111,
-    movements: [200, 450, -400, 3000, -650, -130, 70, 1300],
+    movements: [
+        [200, new Date()],
+        [450, new Date()],
+        [-400, new Date()],
+        [3000, new Date()],
+        [-650, new Date()],
+        [-130, new Date()],
+        [70, new Date()],
+        [1300, new Date()],
+    ],
     interestRate: 1.5,
 };
 
 let account2 = {
     owner: 'Jessica Davis',
     pin: 2222,
-    movements: [5000, 3400, -150, -790, -3210, -1000, 8500, -30],
+    movements: [
+        [5000, new Date()],
+        [3400, new Date()],
+        [-150, new Date()],
+        [-790, new Date()],
+        [-3210, new Date()],
+        [-1000, new Date()],
+        [8500, new Date()],
+        [-30, new Date()],
+    ],
     interestRate: 1.2,
 };
 
 let account3 = {
     owner: 'Steven Thomas Williams',
     pin: 3333,
-    movements: [200, -200, 340, -300, -20, 50, 400, -460],
+    movements: [
+        [200, new Date()],
+        [-200, new Date()],
+        [340, new Date()],
+        [-300, new Date()],
+        [-20, new Date()],
+        [50, new Date()],
+        [400, new Date()],
+        [-460, new Date()],
+    ],
     interestRate: 0.7,
 };
 
 let account4 = {
     owner: 'Sarah Smith',
     pin: 4444,
-    movements: [430, 1000, 700, 50, 90],
+    movements: [
+        [430, new Date()],
+        [1000, new Date()],
+        [700, new Date()],
+        [50, new Date()],
+        [90, new Date()],
+    ],
     interestRate: 1,
 };
 
@@ -120,15 +160,7 @@ const updateUI = function () {
 
 //calculate date and show ----------------
 const showDate = function () {
-    options = {
-        hour: 'numeric',
-        minute: 'numeric',
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-    };
-
-    let date = new Intl.DateTimeFormat(navigator.language, options);
+    let date = new Intl.DateTimeFormat(navigator.language, timeOptions);
     lblDate.textContent = date.format(new Date());
 
     setInterval(() => {
@@ -163,7 +195,10 @@ const logoutTimer = function () {
 //calculate balance------------------
 let balanceCalculator = function () {
     let balance = 0;
-    balance = user.movements.reduce((acc, movement) => acc + movement);
+    balance = user.movements.reduce(function (acc, movement) {
+        acc + movement[0];
+        return acc + movement[0];
+    }, 0);
     lblBalance.textContent = `${balance}€`;
     return balance;
 };
@@ -177,12 +212,15 @@ let showMovements = function () {
     for ([i, movement] of user.movements.entries()) {
         html = `<div class="movements__row">
                     <div class="movements__type movements__type--${
-                        movement > 0 ? 'deposit' : 'withdrawal'
+                        movement[0] > 0 ? 'deposit' : 'withdrawal'
                     }">
                         ${++i} deposit
                     </div>
-                    <div class="movements__date"></div>
-                    <div class="movements__value">${movement}€</div>
+                    <div class="movements__date">${new Intl.DateTimeFormat(
+                        navigator.language,
+                        timeOptions
+                    ).format(movement[1])}</div>
+                    <div class="movements__value">${movement[0]}€</div>
                 </div>`;
         containerMovements.insertAdjacentHTML('afterbegin', html);
     }
@@ -196,8 +234,8 @@ let transferMoney = function (amount, transferTo) {
             account.owner.toLowerCase() === transferTo.toLowerCase() &&
             amount <= balanceCalculator()
         ) {
-            user.movements.push(-amount);
-            account.movements.push(amount);
+            user.movements.push([-amount, new Date()]);
+            account.movements.push([amount, new Date()]);
             inputTransferTo.value = '';
             inputTransferAmount.value = '';
             showMovements();
@@ -214,7 +252,7 @@ let transferMoney = function (amount, transferTo) {
 let requestLoan = function (amount) {
     amount = Number(amount);
     if (0.5 * amount < balanceCalculator()) {
-        user.movements.push(amount);
+        user.movements.push([amount, new Date()]);
         inputLoanAmount.value = '';
         showMovements();
         balanceCalculator();
@@ -238,8 +276,6 @@ let closeAccount = function (name, pin) {
         inputCloseRequestUser = '';
         inputCloseRequestPin = '';
         logout();
-        // console.log(timer);
-        // clearInterval(timer);
     } else {
         window.alert('User not found!');
     }
