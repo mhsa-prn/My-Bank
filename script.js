@@ -2,6 +2,7 @@
 
 //-----------GLOBAL VARIABLES------------
 let user;
+let globalTimer;
 //-------------------------------------------------
 //-----------Start/inputs--------------
 let inputLoginUsername = document.querySelector('.login__input--user');
@@ -9,6 +10,8 @@ let inputLoginPin = document.querySelector('.login__input--pin');
 let inputTransferTo = document.querySelector('.form__input--to');
 let inputTransferAmount = document.querySelector('.form__input--amount');
 let inputLoanAmount = document.querySelector('.form__input--loan-amount');
+let inputCloseRequestUser = document.querySelector('.form__input--user');
+let inputCloseRequestPin = document.querySelector('.form__input--pin');
 //-----------End/inputs--------------
 
 //-----------Start/lables--------------
@@ -22,6 +25,7 @@ let lblBalance = document.querySelector('.balance__value');
 let btnLogin = document.querySelector('.login__btn');
 let btnTransfer = document.querySelector('.form__btn--transfer');
 let btnRequestLoan = document.querySelector('.form__btn--loan');
+let btnCloseAccount = document.querySelector('.form__btn--close');
 //-----------End/buttons--------------
 
 //-----------Start/containers--------------
@@ -144,14 +148,15 @@ const logoutTimer = function () {
             sec < 10 ? `0${sec}` : sec
         }`;
         if (min == 0 && sec == 0) {
-            clearInterval(timer);
-            containerApp.style.opacity = 0;
+            globalTimer = timer;
+            logout();
         }
         if (sec == 0) {
             min--;
             sec = 60;
         }
     }, 1000);
+    return timer;
 };
 //------------------------------------
 
@@ -215,6 +220,35 @@ let requestLoan = function (amount) {
         balanceCalculator();
     } else window.alert('Your account has no enough credit!');
 };
+
+let closeAccount = function (name, pin) {
+    let index = -1;
+    console.log('user owner:', user.owner, 'name:', name);
+    if (user.owner.toLowerCase == name.toLowerCase && user.pin == pin) {
+        for ([i, val] of accounts.entries()) {
+            if (val.owner.toLowerCase == name.toLowerCase) {
+                index = i;
+                break;
+            }
+        }
+    }
+    console.log(index);
+    if (index > -1) {
+        accounts.splice(index, 1);
+        inputCloseRequestUser = '';
+        inputCloseRequestPin = '';
+        logout();
+        // console.log(timer);
+        // clearInterval(timer);
+    } else {
+        window.alert('User not found!');
+    }
+};
+
+let logout = function () {
+    containerApp.style.opacity = 0;
+    clearInterval(globalTimer);
+};
 //---------------------------------- End/functions --------------------------------
 
 btnLogin.addEventListener('click', function (e) {
@@ -230,4 +264,9 @@ btnTransfer.addEventListener('click', function (e) {
 btnRequestLoan.addEventListener('click', function (e) {
     e.preventDefault();
     requestLoan(inputLoanAmount.value);
+});
+
+btnCloseAccount.addEventListener('click', function (e) {
+    e.preventDefault();
+    closeAccount(inputCloseRequestUser.value, inputCloseRequestPin.value);
 });
