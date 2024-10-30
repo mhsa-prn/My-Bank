@@ -28,6 +28,7 @@ let lblLogoutTimer = document.querySelector('.timer');
 let lblBalance = document.querySelector('.balance__value');
 let lblDepositValue = document.querySelector('.summary__value--in');
 let lblWithdrawalValue = document.querySelector('.summary__value--out');
+let lblInterestValue = document.querySelector('.summary__value--interest');
 //-----------End/lables--------------
 
 //-----------Start/buttons--------------
@@ -59,6 +60,7 @@ let account1 = {
         [1300, new Date()],
     ],
     interestRate: 1.5,
+    interestAmount: 0,
 };
 
 let account2 = {
@@ -75,6 +77,7 @@ let account2 = {
         [-30, new Date()],
     ],
     interestRate: 1.2,
+    interestAmount: 0,
 };
 
 let account3 = {
@@ -91,6 +94,7 @@ let account3 = {
         [-460, new Date()],
     ],
     interestRate: 0.7,
+    interestAmount: 0,
 };
 
 let account4 = {
@@ -104,12 +108,18 @@ let account4 = {
         [90, new Date()],
     ],
     interestRate: 1,
+    interestAmount: 0,
 };
 
 let accounts = [account1, account2, account3, account4];
 //---------------------------------- End/accounts --------------------------------
 
 //---------------------------------- Start/functions --------------------------------
+let starter = function () {
+    interestInitialization();
+    interestCalculator();
+};
+
 //login------------------------------------
 let login = function (loginUsername = '', loginPin = '') {
     let username = '';
@@ -161,6 +171,9 @@ const updateUI = function () {
     //show summary
     depositCalculator();
     withdrawalCalculator();
+    //interestCalculator();
+    console.log('us:', user.interestAmount);
+    lblInterestValue.textContent = user.interestAmount + '€';
 };
 //----------------------------------------
 
@@ -199,9 +212,9 @@ const logoutTimer = function () {
 //------------------------------------
 
 //calculate balance------------------
-let balanceCalculator = function () {
+let balanceCalculator = function (currentUser = user) {
     let balance = 0;
-    balance = user.movements.reduce(function (acc, movement) {
+    balance = currentUser.movements.reduce(function (acc, movement) {
         acc + movement[0];
         return acc + movement[0];
     }, 0);
@@ -313,6 +326,59 @@ let withdrawalCalculator = function () {
     lblWithdrawalValue.textContent = Math.abs(withdrawal) + '€';
     return Math.abs(withdrawal);
 };
+
+//the interest is calculated every hour
+let interestCalculator = function () {
+    let interestAmount = 0;
+    let depositOfOneHourAgo = 0;
+    let totalWithdrawals = 0;
+    console.log(new Date().getSeconds() - 10, new Date().getSeconds());
+    let interestTimer = setInterval(() => {
+        for (let account of accounts) {
+            totalWithdrawals = account.movements.reduce((acc, movement) => {
+                if (movement[1].getSeconds() > new Date().getSeconds() - 10) {
+                    //chon faqat adade sanie ro migire, too daghayeghe dige tooye daghayeghe motefavet sharayete moshabeh pish miad
+                    console.log(
+                        'movement[2] > new Date().getSeconds() - 10: ',
+                        acc
+                    );
+                    let num = movement[0] < 0 ? movement[0] : 0;
+                    return acc + num;
+                }
+            }, 0);
+            depositOfOneHourAgo = account.movements.reduce((acc, movement) => {
+                let num =
+                    movement[1].getSeconds <= new Date().getSeconds() - 10
+                        ? movement[0]
+                        : 0;
+                console.log(
+                    'movement[1] <= new Date().getSeconds() - 10: ',
+                    acc
+                );
+                return acc + num;
+            }, 0);
+            interestAmount = depositOfOneHourAgo - Math.abs(totalWithdrawals);
+            if (interestAmount > 0) {
+                account.interestAmount += interestAmount * account.interestRate;
+                account.movements.push([account.interestAmount, new Date()]);
+                balanceCalculator(account);
+            }
+            depositOfOneHourAgo = 0;
+            totalWithdrawals = 0;
+        }
+    }, 10000);
+};
+
+let interestInitialization = function () {
+    accounts.forEach(account => {
+        account.movements.push([100, new Date()]);
+        account.interestAmount = 100;
+    });
+};
+
+// let x = function () {
+//     lblInterestValue = 'm';
+// };
 //---------------------------------- End/functions --------------------------------
 
 btnLogin.addEventListener('click', function (e) {
