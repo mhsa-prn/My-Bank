@@ -26,6 +26,8 @@ let lblWelcome = document.querySelector('.welcome');
 let lblDate = document.querySelector('.date');
 let lblLogoutTimer = document.querySelector('.timer');
 let lblBalance = document.querySelector('.balance__value');
+let lblDepositValue = document.querySelector('.summary__value--in');
+let lblWithdrawalValue = document.querySelector('.summary__value--out');
 //-----------End/lables--------------
 
 //-----------Start/buttons--------------
@@ -155,6 +157,10 @@ const updateUI = function () {
 
     //show movements
     showMovements();
+
+    //show summary
+    depositCalculator();
+    withdrawalCalculator();
 };
 //----------------------------------------
 
@@ -224,6 +230,9 @@ let showMovements = function () {
                 </div>`;
         containerMovements.insertAdjacentHTML('afterbegin', html);
     }
+
+    depositCalculator();
+    withdrawalCalculator();
 };
 
 let transferMoney = function (amount, transferTo) {
@@ -284,6 +293,25 @@ let closeAccount = function (name, pin) {
 let logout = function () {
     containerApp.style.opacity = 0;
     clearInterval(globalTimer);
+};
+
+let depositCalculator = function () {
+    let deposit = user.movements.reduce(function (acc, movement) {
+        let num = movement[0] > 0 ? movement[0] : 0;
+        return acc + num;
+    }, 0);
+    lblDepositValue.textContent = deposit + '€';
+    return deposit;
+};
+
+let withdrawalCalculator = function () {
+    let withdrawal = user.movements.reduce(function (acc, movement) {
+        let num = movement[0] < 0 ? movement[0] : 0;
+        return acc + num;
+    }, 0);
+
+    lblWithdrawalValue.textContent = Math.abs(withdrawal) + '€';
+    return Math.abs(withdrawal);
 };
 //---------------------------------- End/functions --------------------------------
 
