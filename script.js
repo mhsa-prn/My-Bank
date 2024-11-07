@@ -60,7 +60,7 @@ let account1 = {
         [1300, new Date()],
     ],
     interestRate: 1.5,
-    interestAmount: 0,
+    interestAmount: 100,
 };
 
 let account2 = {
@@ -117,6 +117,7 @@ let accounts = [account1, account2, account3, account4];
 //---------------------------------- Start/functions --------------------------------
 let starter = function () {
     interestInitialization();
+    // setInterestAmount();
     interestCalculator();
 };
 
@@ -134,7 +135,7 @@ let login = function (loginUsername = '', loginPin = '') {
             loginUsername.toLowerCase == username.toLowerCase &&
             loginPin == account.pin
         ) {
-            console.log('hey', account.owner);
+            // console.log('hey', account.owner);
             flag = false;
             user = account;
             updateUI();
@@ -171,8 +172,8 @@ const updateUI = function () {
     //show summary
     depositCalculator();
     withdrawalCalculator();
-    //interestCalculator();
-    console.log('us:', user.interestAmount);
+    //setInterestAmount();
+
     lblInterestValue.textContent = user.interestAmount + '€';
 };
 //----------------------------------------
@@ -214,6 +215,7 @@ const logoutTimer = function () {
 //calculate balance------------------
 let balanceCalculator = function (currentUser = user) {
     let balance = 0;
+    console.log(currentUser);
     balance = currentUser.movements.reduce(function (acc, movement) {
         acc + movement[0];
         return acc + movement[0];
@@ -257,7 +259,11 @@ let transferMoney = function (amount, transferTo) {
             amount <= balanceCalculator()
         ) {
             user.movements.push([-amount, new Date()]);
+            setInterestAmount(user, [-amount, new Date()]);
+
             account.movements.push([amount, new Date()]);
+            setInterestAmount(account, [-amount, new Date()]);
+
             inputTransferTo.value = '';
             inputTransferAmount.value = '';
             showMovements();
@@ -283,7 +289,7 @@ let requestLoan = function (amount) {
 
 let closeAccount = function (name, pin) {
     let index = -1;
-    console.log('user owner:', user.owner, 'name:', name);
+    // console.log('user owner:', user.owner, 'name:', name);
     if (user.owner.toLowerCase == name.toLowerCase && user.pin == pin) {
         for ([i, val] of accounts.entries()) {
             if (val.owner.toLowerCase == name.toLowerCase) {
@@ -292,7 +298,7 @@ let closeAccount = function (name, pin) {
             }
         }
     }
-    console.log(index);
+    // console.log(index);
     if (index > -1) {
         accounts.splice(index, 1);
         inputCloseRequestUser = '';
@@ -328,52 +334,47 @@ let withdrawalCalculator = function () {
 };
 
 //the interest is calculated every hour
+let setInterestAmount = function (currentUser, movement) {
+    let totalBalance = balanceCalculator(currentUser);
+    if (totalBalance >= totalBalance + movement[0]) {
+        currentUser.interestAmount = totalBalance + movement[0];
+    } else {
+        currentUser.interestAmount = totalBalance;
+    }
+
+    // let interestAmount = 0;
+    // let depositOfOneHourAgo = 0;
+    // let totalWithdrawals = 0;
+    // // console.log(new Date().getSeconds() - 10, new Date().getSeconds());
+    // let interestTimer = setInterval(() => {
+    //     for (let account of accounts) {
+
+    //     }
+    // }, 10000);
+};
+
 let interestCalculator = function () {
-    let interestAmount = 0;
-    let depositOfOneHourAgo = 0;
-    let totalWithdrawals = 0;
-    console.log(new Date().getSeconds() - 10, new Date().getSeconds());
+    let counter = 0;
     let interestTimer = setInterval(() => {
         for (let account of accounts) {
-            totalWithdrawals = account.movements.reduce((acc, movement) => {
-                if (movement[1].getSeconds() > new Date().getSeconds() - 10) {
-                    //chon faqat adade sanie ro migire, too daghayeghe dige tooye daghayeghe motefavet sharayete moshabeh pish miad
-                    console.log(
-                        'movement[2] > new Date().getSeconds() - 10: ',
-                        acc
-                    );
-                    let num = movement[0] < 0 ? movement[0] : 0;
-                    return acc + num;
-                }
-            }, 0);
-            depositOfOneHourAgo = account.movements.reduce((acc, movement) => {
-                let num =
-                    movement[1].getSeconds <= new Date().getSeconds() - 10
-                        ? movement[0]
-                        : 0;
-                console.log(
-                    'movement[1] <= new Date().getSeconds() - 10: ',
-                    acc
-                );
-                return acc + num;
-            }, 0);
-            interestAmount = depositOfOneHourAgo - Math.abs(totalWithdrawals);
-            if (interestAmount > 0) {
-                account.interestAmount += interestAmount * account.interestRate;
-                account.movements.push([account.interestAmount, new Date()]);
-                balanceCalculator(account);
-            }
-            depositOfOneHourAgo = 0;
-            totalWithdrawals = 0;
+            account.interestAmount =
+                account.interestAmount +
+                account.interestAmount * account.interestRate;
+            user.movements.push([account.interestAmount, new Date()]);
+            //show the movement
+            balanceCalculator();
         }
-    }, 10000);
+        console.log(user.interestAmount);
+        lblInterestValue.textContent = user.interestAmount.toFixed(2);
+        console.log(++counter);
+    }, 5000);
 };
 
 let interestInitialization = function () {
-    accounts.forEach(account => {
-        account.movements.push([100, new Date()]);
-        account.interestAmount = 100;
-    });
+    // accounts.forEach(account => {
+    //     account.movements.push([100, new Date()]);
+    //     account.interestAmount = 100;
+    // });
 };
 
 // let x = function () {
@@ -400,3 +401,5 @@ btnCloseAccount.addEventListener('click', function (e) {
     e.preventDefault();
     closeAccount(inputCloseRequestUser.value, inputCloseRequestPin.value);
 });
+
+// console.log(new Date().getMinutes() - 20);
