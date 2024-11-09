@@ -59,7 +59,7 @@ let account1 = {
         [70, new Date()],
         [1300, new Date()],
     ],
-    interestRate: 1.5,
+    interestRate: 0.5,
     interestAmount: 100,
 };
 
@@ -76,7 +76,7 @@ let account2 = {
         [8500, new Date()],
         [-30, new Date()],
     ],
-    interestRate: 1.2,
+    interestRate: 0.2,
     interestAmount: 0,
 };
 
@@ -93,7 +93,7 @@ let account3 = {
         [400, new Date()],
         [-460, new Date()],
     ],
-    interestRate: 0.7,
+    interestRate: 0.3,
     interestAmount: 0,
 };
 
@@ -116,8 +116,6 @@ let accounts = [account1, account2, account3, account4];
 
 //---------------------------------- Start/functions --------------------------------
 let starter = function () {
-    interestInitialization();
-    // setInterestAmount();
     interestCalculator();
 };
 
@@ -215,12 +213,12 @@ const logoutTimer = function () {
 //calculate balance------------------
 let balanceCalculator = function (currentUser = user) {
     let balance = 0;
-    console.log(currentUser);
+    //console.log(currentUser);
     balance = currentUser.movements.reduce(function (acc, movement) {
         acc + movement[0];
         return acc + movement[0];
     }, 0);
-    lblBalance.textContent = `${balance}€`;
+    lblBalance.textContent = `${balance.toFixed(2)}€`;
     return balance;
 };
 //-------------------------------------
@@ -250,6 +248,25 @@ let showMovements = function () {
     withdrawalCalculator();
 };
 
+let showLastMovement = function (movements) {
+    let html = '';
+    let currentMovement = movements[movements.length - 1];
+    console.log(currentMovement);
+    html = `<div class="movements__row">
+                    <div class="movements__type movements__type--${
+                        currentMovement[0] > 0 ? 'deposit' : 'withdrawal'
+                    }">
+                        ${movements.length} deposit
+                    </div>
+                    <div class="movements__date">${new Intl.DateTimeFormat(
+                        navigator.language,
+                        timeOptions
+                    ).format(currentMovement[1])}</div>
+                    <div class="movements__value">${currentMovement[0]}€</div>
+                </div>`;
+    containerMovements.insertAdjacentHTML('afterbegin', html);
+};
+
 let transferMoney = function (amount, transferTo) {
     amount = Number(amount);
     let flag = true;
@@ -260,13 +277,13 @@ let transferMoney = function (amount, transferTo) {
         ) {
             user.movements.push([-amount, new Date()]);
             setInterestAmount(user, [-amount, new Date()]);
+            showLastMovement(user.movements);
 
             account.movements.push([amount, new Date()]);
             setInterestAmount(account, [-amount, new Date()]);
 
             inputTransferTo.value = '';
             inputTransferAmount.value = '';
-            showMovements();
             balanceCalculator();
             flag = false;
             break;
@@ -282,14 +299,13 @@ let requestLoan = function (amount) {
     if (0.5 * amount < balanceCalculator()) {
         user.movements.push([amount, new Date()]);
         inputLoanAmount.value = '';
-        showMovements();
+        showLastMovement(user.movements);
         balanceCalculator();
     } else window.alert('Your account has no enough credit!');
 };
 
 let closeAccount = function (name, pin) {
     let index = -1;
-    // console.log('user owner:', user.owner, 'name:', name);
     if (user.owner.toLowerCase == name.toLowerCase && user.pin == pin) {
         for ([i, val] of accounts.entries()) {
             if (val.owner.toLowerCase == name.toLowerCase) {
@@ -298,7 +314,6 @@ let closeAccount = function (name, pin) {
             }
         }
     }
-    // console.log(index);
     if (index > -1) {
         accounts.splice(index, 1);
         inputCloseRequestUser = '';
@@ -333,7 +348,7 @@ let withdrawalCalculator = function () {
     return Math.abs(withdrawal);
 };
 
-//the interest is calculated every hour
+//the interest is calculated every minute
 let setInterestAmount = function (currentUser, movement) {
     let totalBalance = balanceCalculator(currentUser);
     if (totalBalance >= totalBalance + movement[0]) {
@@ -341,45 +356,27 @@ let setInterestAmount = function (currentUser, movement) {
     } else {
         currentUser.interestAmount = totalBalance;
     }
-
-    // let interestAmount = 0;
-    // let depositOfOneHourAgo = 0;
-    // let totalWithdrawals = 0;
-    // // console.log(new Date().getSeconds() - 10, new Date().getSeconds());
-    // let interestTimer = setInterval(() => {
-    //     for (let account of accounts) {
-
-    //     }
-    // }, 10000);
 };
 
 let interestCalculator = function () {
     let counter = 0;
+    let flag = false;
     let interestTimer = setInterval(() => {
         for (let account of accounts) {
             account.interestAmount =
                 account.interestAmount +
                 account.interestAmount * account.interestRate;
-            user.movements.push([account.interestAmount, new Date()]);
-            //show the movement
+            account.interestAmount > 0
+                ? account.movements.push([account.interestAmount, new Date()])
+                : 0;
+
             balanceCalculator();
         }
-        console.log(user.interestAmount);
+        user.interestAmount > 0 ? showLastMovement(user.movements) : 0;
         lblInterestValue.textContent = user.interestAmount.toFixed(2);
-        console.log(++counter);
     }, 5000);
 };
 
-let interestInitialization = function () {
-    // accounts.forEach(account => {
-    //     account.movements.push([100, new Date()]);
-    //     account.interestAmount = 100;
-    // });
-};
-
-// let x = function () {
-//     lblInterestValue = 'm';
-// };
 //---------------------------------- End/functions --------------------------------
 
 btnLogin.addEventListener('click', function (e) {
@@ -401,5 +398,3 @@ btnCloseAccount.addEventListener('click', function (e) {
     e.preventDefault();
     closeAccount(inputCloseRequestUser.value, inputCloseRequestPin.value);
 });
-
-// console.log(new Date().getMinutes() - 20);
