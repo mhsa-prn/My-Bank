@@ -61,6 +61,7 @@ let account1 = {
     ],
     interestRate: 0.5,
     interestAmount: 100,
+    interest: 0,
 };
 
 let account2 = {
@@ -78,6 +79,7 @@ let account2 = {
     ],
     interestRate: 0.2,
     interestAmount: 0,
+    interest: 0,
 };
 
 let account3 = {
@@ -95,6 +97,7 @@ let account3 = {
     ],
     interestRate: 0.3,
     interestAmount: 0,
+    interest: 0,
 };
 
 let account4 = {
@@ -107,8 +110,9 @@ let account4 = {
         [50, new Date()],
         [90, new Date()],
     ],
-    interestRate: 1,
+    interestRate: 0.5,
     interestAmount: 0,
+    interest: 0,
 };
 
 let accounts = [account1, account2, account3, account4];
@@ -170,9 +174,9 @@ const updateUI = function () {
     //show summary
     depositCalculator();
     withdrawalCalculator();
-    //setInterestAmount();
 
-    lblInterestValue.textContent = user.interestAmount + '€';
+    //set interest value
+    lblInterestValue.textContent = `${user.interest.toFixed(2)}€`;
 };
 //----------------------------------------
 
@@ -219,6 +223,7 @@ let balanceCalculator = function (currentUser = user) {
         return acc + movement[0];
     }, 0);
     lblBalance.textContent = `${balance.toFixed(2)}€`;
+    // setInterestAmount(currentUser,balance);
     return balance;
 };
 //-------------------------------------
@@ -239,7 +244,9 @@ let showMovements = function () {
                         navigator.language,
                         timeOptions
                     ).format(movement[1])}</div>
-                    <div class="movements__value">${movement[0]}€</div>
+                    <div class="movements__value">${movement[0].toFixed(
+                        2
+                    )}€</div>
                 </div>`;
         containerMovements.insertAdjacentHTML('afterbegin', html);
     }
@@ -262,7 +269,9 @@ let showLastMovement = function (movements) {
                         navigator.language,
                         timeOptions
                     ).format(currentMovement[1])}</div>
-                    <div class="movements__value">${currentMovement[0]}€</div>
+                    <div class="movements__value">${currentMovement[0].toFixed(
+                        2
+                    )}€</div>
                 </div>`;
     containerMovements.insertAdjacentHTML('afterbegin', html);
 };
@@ -275,12 +284,22 @@ let transferMoney = function (amount, transferTo) {
             account.owner.toLowerCase() === transferTo.toLowerCase() &&
             amount <= balanceCalculator()
         ) {
+            setInterestAmount(
+                user,
+                [-amount, new Date()],
+                balanceCalculator(user)
+            );
             user.movements.push([-amount, new Date()]);
-            setInterestAmount(user, [-amount, new Date()]);
+            withdrawalCalculator();
+
             showLastMovement(user.movements);
 
+            setInterestAmount(
+                account,
+                [-amount, new Date()],
+                balanceCalculator(account)
+            );
             account.movements.push([amount, new Date()]);
-            setInterestAmount(account, [-amount, new Date()]);
 
             inputTransferTo.value = '';
             inputTransferAmount.value = '';
@@ -299,6 +318,7 @@ let requestLoan = function (amount) {
     if (0.5 * amount < balanceCalculator()) {
         user.movements.push([amount, new Date()]);
         inputLoanAmount.value = '';
+        setInterestAmount(user, [amount, new Date()], balanceCalculator(user));
         showLastMovement(user.movements);
         balanceCalculator();
     } else window.alert('Your account has no enough credit!');
@@ -344,17 +364,17 @@ let withdrawalCalculator = function () {
         return acc + num;
     }, 0);
 
-    lblWithdrawalValue.textContent = Math.abs(withdrawal) + '€';
+    lblWithdrawalValue.textContent = Math.abs(withdrawal).toFixed(2) + '€';
     return Math.abs(withdrawal);
 };
 
 //the interest is calculated every minute
-let setInterestAmount = function (currentUser, movement) {
-    let totalBalance = balanceCalculator(currentUser);
-    if (totalBalance >= totalBalance + movement[0]) {
+let setInterestAmount = function (currentUser, movement, totalBalance) {
+    let currentBalance = balanceCalculator(currentUser);
+    if (currentBalance >= totalBalance + movement[0]) {
         currentUser.interestAmount = totalBalance + movement[0];
     } else {
-        currentUser.interestAmount = totalBalance;
+        currentUser.interestAmount = currentBalance;
     }
 };
 
@@ -363,18 +383,25 @@ let interestCalculator = function () {
     let flag = false;
     let interestTimer = setInterval(() => {
         for (let account of accounts) {
-            account.interestAmount =
-                account.interestAmount +
-                account.interestAmount * account.interestRate;
-            account.interestAmount > 0
-                ? account.movements.push([account.interestAmount, new Date()])
-                : 0;
-
+            if (account.interestAmount * account.interestRate > 0) {
+                account.interest +=
+                    account.interestAmount * account.interestRate;
+                account.movements.push([
+                    account.interestAmount * account.interestRate,
+                    new Date(),
+                ]);
+            }
+            setInterestAmount(
+                account,
+                account.interestAmount * account.interestRate
+            );
             balanceCalculator();
         }
-        user.interestAmount > 0 ? showLastMovement(user.movements) : 0;
-        lblInterestValue.textContent = user.interestAmount.toFixed(2);
-    }, 5000);
+        if (user.interest > 0) {
+            lblInterestValue.textContent = `${user.interest.toFixed(2)}€`;
+            showLastMovement(user.movements);
+        }
+    }, 10000);
 };
 
 //---------------------------------- End/functions --------------------------------
