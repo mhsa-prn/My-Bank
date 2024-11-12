@@ -10,6 +10,7 @@ let timeOptions = {
     month: 'long',
     year: 'numeric',
 };
+let movementsIsSorted = false;
 //-------------------------------------------------
 //-----------Start/inputs--------------
 let inputLoginUsername = document.querySelector('.login__input--user');
@@ -36,6 +37,7 @@ let btnLogin = document.querySelector('.login__btn');
 let btnTransfer = document.querySelector('.form__btn--transfer');
 let btnRequestLoan = document.querySelector('.form__btn--loan');
 let btnCloseAccount = document.querySelector('.form__btn--close');
+let btnSortMovements = document.querySelector('.btn--sort');
 //-----------End/buttons--------------
 
 //-----------Start/containers--------------
@@ -228,12 +230,14 @@ let balanceCalculator = function (currentUser = user) {
 };
 //-------------------------------------
 
-let showMovements = function () {
+let showMovements = function (movements = user.movements) {
     //containerMovements.remove();
     containerMovements.replaceChildren();
     let html = '';
 
-    for ([i, movement] of user.movements.entries()) {
+    console.log(movements);
+
+    for ([i, movement] of movements.entries()) {
         html = `<div class="movements__row">
                     <div class="movements__type movements__type--${
                         movement[0] > 0 ? 'deposit' : 'withdrawal'
@@ -404,6 +408,36 @@ let interestCalculator = function () {
     }, 10000);
 };
 
+//Sort function ------------------------------------------------------------------
+let sortMovements = function (originalMovements) {
+    let sortedMovements = [].concat(originalMovements);
+
+    for (let i = 0; i < sortedMovements.length - 1; i++) {
+        for (let j = 0; j < sortedMovements.length - 1; j++) {
+            if (sortedMovements[j][0] > sortedMovements[j + 1][0]) {
+                console.log(sortedMovements[j]);
+                [sortedMovements[j], sortedMovements[j + 1]] = [
+                    sortedMovements[j + 1],
+                    sortedMovements[j],
+                ];
+            }
+        }
+    }
+
+    if (movementsIsSorted) {
+        showMovements(originalMovements);
+        movementsIsSorted = false;
+    } else {
+        showMovements(sortedMovements);
+        movementsIsSorted = true;
+    }
+
+    // if (movementsIsSorted) {
+    //     showMovements(sortedMovements);
+    //     console.log(sortedMovements);
+};
+//--------------------------------------------------------------------------------
+
 //---------------------------------- End/functions --------------------------------
 
 btnLogin.addEventListener('click', function (e) {
@@ -424,4 +458,9 @@ btnRequestLoan.addEventListener('click', function (e) {
 btnCloseAccount.addEventListener('click', function (e) {
     e.preventDefault();
     closeAccount(inputCloseRequestUser.value, inputCloseRequestPin.value);
+});
+
+btnSortMovements.addEventListener('click', function (e) {
+    e.preventDefault();
+    sortMovements(user.movements);
 });
