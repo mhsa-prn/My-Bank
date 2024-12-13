@@ -180,20 +180,290 @@ const updateUI = function () {
     //set interest value
     lblInterestValue.textContent = `${user.interest.toFixed(2)}€`;
 };
+//----------------------------------------
 
-const closeModal = function () {
-    modal.classList.add('hidden');
-    overlay.classList.add('hidden');
+//calculate date and show ----------------
+const showDate = function () {
+    let date = new Intl.DateTimeFormat(navigator.language, timeOptions);
+    lblDate.textContent = date.format(new Date());
+
+    setInterval(() => {
+        lblDate.textContent = date.format(new Date());
+    }, 60000);
+};
+//-------------------------------------
+
+//log out timer function------------
+const logoutTimer = function () {
+    lblLogoutTimer.textContent = '15:00';
+    let min = 14;
+    let sec = 60;
+    let timer = setInterval(() => {
+        sec--;
+        lblLogoutTimer.textContent = `${min < 10 ? `0${min}` : min}:${
+            sec < 10 ? `0${sec}` : sec
+        }`;
+        globalTimer = timer;
+        if (min == 0 && sec == 0) {
+            globalTimer = timer;
+            logout();
+        }
+        if (sec == 0) {
+            min--;
+            sec = 60;
+        }
+    }, 1000);
+    return timer;
+};
+//------------------------------------
+
+//calculate balance------------------
+let balanceCalculator = function (currentUser = user) {
+    let balance = 0;
+    //console.log(currentUser);
+    balance = currentUser.movements.reduce(function (acc, movement) {
+        acc + movement[0];
+        return acc + movement[0];
+    }, 0);
+    lblBalance.textContent = `${balance.toFixed(2)}€`;
+    // setInterestAmount(currentUser,balance);
+    return balance;
+};
+//-------------------------------------
+
+let showMovements = function (movements = user.movements) {
+    //containerMovements.remove();
+    containerMovements.replaceChildren();
+    let html = '';
+
+    console.log(movements);
+
+    for ([i, movement] of movements.entries()) {
+        html = `<div class="movements__row">
+                    <div class="movements__type movements__type--${
+                        movement[0] > 0 ? 'deposit' : 'withdrawal'
+                    }">
+                        ${++i} deposit
+                    </div>
+                    <div class="movements__date">${new Intl.DateTimeFormat(
+                        navigator.language,
+                        timeOptions
+                    ).format(movement[1])}</div>
+                    <div class="movements__value">${movement[0].toFixed(
+                        2
+                    )}€</div>
+                </div>`;
+        containerMovements.insertAdjacentHTML('afterbegin', html);
+    }
+
+    depositCalculator();
+    withdrawalCalculator();
 };
 
-for (let i = 0; i < btnsOpenModal.length; i++)
-    btnsOpenModal[i].addEventListener('click', openModal);
+let showLastMovement = function (movements) {
+    let html = '';
+    let currentMovement = movements[movements.length - 1];
+    console.log(currentMovement);
+    html = `<div class="movements__row">
+                    <div class="movements__type movements__type--${
+                        currentMovement[0] > 0 ? 'deposit' : 'withdrawal'
+                    }">
+                        ${movements.length} deposit
+                    </div>
+                    <div class="movements__date">${new Intl.DateTimeFormat(
+                        navigator.language,
+                        timeOptions
+                    ).format(currentMovement[1])}</div>
+                    <div class="movements__value">${currentMovement[0].toFixed(
+                        2
+                    )}€</div>
+                </div>`;
+    containerMovements.insertAdjacentHTML('afterbegin', html);
+};
 
-btnCloseModal.addEventListener('click', closeModal);
-overlay.addEventListener('click', closeModal);
+let transferMoney = function (amount, transferTo) {
+    amount = Number(amount);
+    let flag = true;
+    for (let account of accounts) {
+        if (
+            account.owner.toLowerCase() === transferTo.toLowerCase() &&
+            amount <= balanceCalculator()
+        ) {
+            setInterestAmount(
+                user,
+                [-amount, new Date()],
+                balanceCalculator(user)
+            );
+            user.movements.push([-amount, new Date()]);
+            withdrawalCalculator();
 
-document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
-        closeModal();
+            showLastMovement(user.movements);
+
+            setInterestAmount(
+                account,
+                [-amount, new Date()],
+                balanceCalculator(account)
+            );
+            account.movements.push([amount, new Date()]);
+
+            inputTransferTo.value = '';
+            inputTransferAmount.value = '';
+            balanceCalculator();
+            flag = false;
+            break;
+        }
     }
+    if (flag) {
+        window.alert('Transfer is impossible!');
+        inputTransferTo.value = '';
+        inputTransferAmount.value = '';
+    }
+};
+
+let requestLoan = function (amount) {
+    amount = Number(amount);
+    if (0.5 * amount < balanceCalculator()) {
+        user.movements.push([amount, new Date()]);
+        inputLoanAmount.value = '';
+        setInterestAmount(user, [amount, new Date()], balanceCalculator(user));
+        showLastMovement(user.movements);
+        balanceCalculator();
+    } else {
+        inputLoanAmount.value = '';
+        window.alert('Your account has no enough credit!');
+    }
+};
+
+let closeAccount = function (name, pin) {
+    let index = -1;
+    if (user.owner.toLowerCase == name.toLowerCase && user.pin == pin) {
+        for ([i, val] of accounts.entries()) {
+            if (val.owner.toLowerCase == name.toLowerCase) {
+                index = i;
+                break;
+            }
+        }
+    }
+    if (index > -1) {
+        accounts.splice(index, 1);
+        inputCloseRequestUser = '';
+        inputCloseRequestPin = '';
+        logout();
+    } else {
+        window.alert('User not found!');
+    }
+};
+
+let logout = function () {
+    containerApp.style.opacity = 0;
+    clearInterval(globalTimer);
+};
+
+let depositCalculator = function () {
+    let deposit = user.movements.reduce(function (acc, movement) {
+        let num = movement[0] > 0 ? movement[0] : 0;
+        return acc + num;
+    }, 0);
+    lblDepositValue.textContent = deposit + '€';
+    return deposit;
+};
+
+let withdrawalCalculator = function () {
+    let withdrawal = user.movements.reduce(function (acc, movement) {
+        let num = movement[0] < 0 ? movement[0] : 0;
+        return acc + num;
+    }, 0);
+
+    lblWithdrawalValue.textContent = Math.abs(withdrawal).toFixed(2) + '€';
+    return Math.abs(withdrawal);
+};
+
+//the interest is calculated every minute
+let setInterestAmount = function (currentUser, movement, totalBalance) {
+    let currentBalance = balanceCalculator(currentUser);
+    if (currentBalance >= totalBalance + movement[0]) {
+        currentUser.interestAmount = totalBalance + movement[0];
+    } else {
+        currentUser.interestAmount = currentBalance;
+    }
+};
+
+let interestCalculator = function () {
+    let counter = 0;
+    let flag = false;
+    let interestTimer = setInterval(() => {
+        for (let account of accounts) {
+            if (account.interestAmount * account.interestRate > 0) {
+                account.interest +=
+                    account.interestAmount * account.interestRate;
+                account.movements.push([
+                    account.interestAmount * account.interestRate,
+                    new Date(),
+                ]);
+            }
+            setInterestAmount(
+                account,
+                account.interestAmount * account.interestRate
+            );
+            balanceCalculator();
+        }
+        if (user.interest > 0) {
+            lblInterestValue.textContent = `${user.interest.toFixed(2)}€`;
+            showLastMovement(user.movements);
+        }
+    }, 60000);
+};
+
+//Sort function ------------------------------------------------------------------
+let sortMovements = function (originalMovements) {
+    let sortedMovements = [].concat(originalMovements);
+
+    for (let i = 0; i < sortedMovements.length - 1; i++) {
+        for (let j = 0; j < sortedMovements.length - 1; j++) {
+            if (sortedMovements[j][0] > sortedMovements[j + 1][0]) {
+                console.log(sortedMovements[j]);
+                [sortedMovements[j], sortedMovements[j + 1]] = [
+                    sortedMovements[j + 1],
+                    sortedMovements[j],
+                ];
+            }
+        }
+    }
+
+    if (movementsIsSorted) {
+        showMovements(originalMovements);
+        movementsIsSorted = false;
+    } else {
+        showMovements(sortedMovements);
+        movementsIsSorted = true;
+    }
+};
+//--------------------------------------------------------------------------------
+
+//---------------------------------- End/functions --------------------------------
+
+btnLogin.addEventListener('click', function (e) {
+    e.preventDefault();
+    clearInterval(globalTimer);
+    login(inputLoginUsername.value, inputLoginPin.value);
+});
+
+btnTransfer.addEventListener('click', function (e) {
+    e.preventDefault();
+    transferMoney(inputTransferAmount.value, inputTransferTo.value);
+});
+
+btnRequestLoan.addEventListener('click', function (e) {
+    e.preventDefault();
+    requestLoan(inputLoanAmount.value);
+});
+
+btnCloseAccount.addEventListener('click', function (e) {
+    e.preventDefault();
+    closeAccount(inputCloseRequestUser.value, inputCloseRequestPin.value);
+});
+
+btnSortMovements.addEventListener('click', function (e) {
+    e.preventDefault();
+    sortMovements(user.movements);
 });
