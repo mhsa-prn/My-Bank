@@ -203,6 +203,7 @@ const logoutTimer = function () {
         lblLogoutTimer.textContent = `${min < 10 ? `0${min}` : min}:${
             sec < 10 ? `0${sec}` : sec
         }`;
+        globalTimer = timer;
         if (min == 0 && sec == 0) {
             globalTimer = timer;
             logout();
@@ -431,10 +432,6 @@ let sortMovements = function (originalMovements) {
         showMovements(sortedMovements);
         movementsIsSorted = true;
     }
-
-    // if (movementsIsSorted) {
-    //     showMovements(sortedMovements);
-    //     console.log(sortedMovements);
 };
 //--------------------------------------------------------------------------------
 
@@ -442,6 +439,7 @@ let sortMovements = function (originalMovements) {
 
 btnLogin.addEventListener('click', function (e) {
     e.preventDefault();
+    clearInterval(globalTimer);
     login(inputLoginUsername.value, inputLoginPin.value);
 });
 
